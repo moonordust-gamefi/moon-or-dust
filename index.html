@@ -18,6 +18,10 @@
       padding: 0;
     }
     .font-pixel { font-family: 'Press Start 2P', monospace; }
+    /* Scrollbar for Roadmap tab */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0d1322; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
 </head>
 <body class="flex justify-center items-center min-h-screen text-slate-100 overflow-hidden bg-slate-950">
@@ -26,7 +30,7 @@
   <div class="relative w-full max-w-[430px] h-[100dvh] bg-[#0d1322] flex flex-col shadow-2xl overflow-hidden sm:rounded-3xl sm:border sm:border-slate-800">
 
     <!-- Top Bar -->
-    <header class="p-3 bg-[#141c30] border-b border-slate-800 flex items-center justify-between z-20 gap-2">
+    <header class="p-3 bg-[#141c30] border-b border-slate-800 flex items-center justify-between z-20 gap-2 shrink-0">
       <!-- Player / Wallet Area -->
       <div class="flex items-center space-x-2">
         <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-500 via-emerald-400 to-amber-400 p-0.5 shadow-md shadow-purple-500/20 shrink-0">
@@ -67,51 +71,137 @@
       </div>
     </header>
 
-    <!-- Main Game Canvas Area -->
-    <main class="relative flex-1 bg-black overflow-hidden">
-      <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+    <!-- Main Content Area -->
+    <main class="relative flex-1 bg-black overflow-hidden flex flex-col">
 
-      <!-- Start Overlay Screen -->
-      <div id="startOverlay" class="absolute inset-0 bg-[#070b14]/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10">
-        <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-amber-400 flex items-center justify-center text-3xl mb-3 shadow-lg shadow-purple-500/30 animate-bounce">
-          🚀
-          <span class="absolute -top-2 -right-2 text-xs bg-emerald-400 text-slate-950 font-bold px-1.5 py-0.5 rounded-full">SOL</span>
+      <!-- TAB 1: FLIGHT GAME SCREEN -->
+      <div id="tab-game" class="w-full h-full relative">
+        <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+        <!-- Start Overlay Screen -->
+        <div id="startOverlay" class="absolute inset-0 bg-[#070b14]/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10">
+          <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-amber-400 flex items-center justify-center text-3xl mb-3 shadow-lg shadow-purple-500/30 animate-bounce">
+            🚀
+            <span class="absolute -top-2 -right-2 text-xs bg-emerald-400 text-slate-950 font-bold px-1.5 py-0.5 rounded-full">SOL</span>
+          </div>
+          <h1 class="text-2xl font-bold tracking-wider text-white uppercase mb-1">Moon or Dust</h1>
+          <p class="text-xs text-slate-400 mb-6 max-w-xs leading-relaxed">
+            Thrust your rocket above the dump candles! Grab gems on Solana to pump your bag to 100% bonding curve!
+          </p>
+
+          <button id="startBtn" class="w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all">
+            LAUNCH TO MOON (-1 FUEL)
+          </button>
+          <div id="noFuelMsg" class="hidden text-xs text-rose-400 mt-2 font-medium">Tank Empty! Refuel below to continue.</div>
         </div>
-        <h1 class="text-2xl font-bold tracking-wider text-white uppercase mb-1">Moon or Dust</h1>
-        <p class="text-xs text-slate-400 mb-6 max-w-xs leading-relaxed">
-          Thrust your rocket above the dump candles! Grab gems on Solana to pump your bag to 100% bonding curve!
-        </p>
 
-        <button id="startBtn" class="w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition-all">
-          LAUNCH TO MOON (-1 FUEL)
-        </button>
-        <div id="noFuelMsg" class="hidden text-xs text-rose-400 mt-2 font-medium">Tank Empty! Refuel below to continue.</div>
+        <!-- Game Over Overlay Screen -->
+        <div id="gameOverOverlay" class="hidden absolute inset-0 bg-[#070b14]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+          <div class="text-4xl mb-2">💥</div>
+          <h2 class="text-base font-bold text-rose-400 uppercase tracking-wider mb-2 font-pixel">RUGGED & DUMPED!</h2>
+          <p class="text-xs text-slate-400 mb-4">A whale liquidated you with a giant red candle!</p>
+
+          <div class="w-full max-w-xs bg-[#131b2e] p-4 rounded-xl border border-slate-800 mb-5 space-y-2 text-left text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Altitude Travelled:</span>
+              <span id="finalDistance" class="font-bold text-white font-mono">0m</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Tokens Farmed:</span>
+              <span id="finalDust" class="font-bold text-emerald-400 font-mono">+0 $DUST</span>
+            </div>
+            <div class="flex justify-between border-t border-slate-800 pt-1.5">
+              <span class="text-slate-400">All-Time High:</span>
+              <span id="bestDistance" class="font-bold text-amber-400 font-mono">0m</span>
+            </div>
+          </div>
+
+          <button id="restartBtn" class="w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-500/20 active:scale-95 transition-all">
+            RETRY FLIGHT (-1 FUEL)
+          </button>
+        </div>
       </div>
 
-      <!-- Game Over Overlay Screen -->
-      <div id="gameOverOverlay" class="hidden absolute inset-0 bg-[#070b14]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
-        <div class="text-4xl mb-2">💥</div>
-        <h2 class="text-base font-bold text-rose-400 uppercase tracking-wider mb-2 font-pixel">RUGGED & DUMPED!</h2>
-        <p class="text-xs text-slate-400 mb-4">A whale liquidated you with a giant red candle!</p>
-
-        <div class="w-full max-w-xs bg-[#131b2e] p-4 rounded-xl border border-slate-800 mb-5 space-y-2 text-left text-xs">
-          <div class="flex justify-between">
-            <span class="text-slate-400">Altitude Travelled:</span>
-            <span id="finalDistance" class="font-bold text-white font-mono">0m</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">Tokens Farmed:</span>
-            <span id="finalDust" class="font-bold text-emerald-400 font-mono">+0 $DUST</span>
-          </div>
-          <div class="flex justify-between border-t border-slate-800 pt-1.5">
-            <span class="text-slate-400">All-Time High:</span>
-            <span id="bestDistance" class="font-bold text-amber-400 font-mono">0m</span>
+      <!-- TAB 2: ROADMAP SCREEN -->
+      <div id="tab-roadmap" class="hidden w-full h-full bg-[#0d1322] p-4 overflow-y-auto space-y-4">
+        <div class="flex items-center space-x-2 pb-2 border-b border-slate-800">
+          <span class="text-2xl">🗺️</span>
+          <div>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider">Mission Roadmap</h2>
+            <p class="text-[11px] text-slate-400">Rapid launch timeline: From pump.fun to deep space</p>
           </div>
         </div>
 
-        <button id="restartBtn" class="w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-500/20 active:scale-95 transition-all">
-          RETRY FLIGHT (-1 FUEL)
-        </button>
+        <!-- Timeline Items -->
+        <div class="relative pl-5 border-l-2 border-purple-500/40 space-y-5 my-2">
+
+          <!-- Phase 1 -->
+          <div class="relative">
+            <span class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#0d1322] shadow-md shadow-emerald-400/50"></span>
+            <div class="bg-[#131b2e] p-3 rounded-2xl border border-emerald-500/30">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs text-emerald-400">PHASE 1: IGNITION</span>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded">Q4 2026 • LIVE</span>
+              </div>
+              <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                <li>Telegram Mini App & Web Game Alpha release</li>
+                <li>Solana Wallet Connect (Phantom, Solflare, OKX)</li>
+                <li>$DUST shard collection & Fuel reload mechanics</li>
+                <li>Viral community building on X & Telegram</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Phase 2 (ĐÃ ĐƯỢC CHUYỂN SANG Q4 2026 - QUÝ NÀY) -->
+          <div class="relative">
+            <span class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-purple-500 border-2 border-[#0d1322] shadow-md shadow-purple-500/50"></span>
+            <div class="bg-[#131b2e] p-3 rounded-2xl border border-purple-500/50">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs text-purple-300">PHASE 2: PUMP.FUN LAUNCH</span>
+                <span class="text-[9px] bg-purple-500/30 text-purple-200 font-bold px-1.5 py-0.5 rounded animate-pulse">THIS QUARTER (Q4 2026)</span>
+              </div>
+              <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                <li>Fair-launch $DUST token on <b>pump.fun</b></li>
+                <li>Season 1 Airdrop claim for early degen pilots</li>
+                <li>100% Bonding curve migration to Raydium DEX</li>
+                <li>Coin burn mechanism powered by game upgrades</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Phase 3 -->
+          <div class="relative">
+            <span class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-slate-600 border-2 border-[#0d1322]"></span>
+            <div class="bg-[#131b2e] p-3 rounded-2xl border border-slate-800">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs text-amber-300">PHASE 3: MULTIPLAYER PVP</span>
+                <span class="text-[9px] bg-slate-800 text-slate-400 font-bold px-1.5 py-0.5 rounded">Q1 2027</span>
+              </div>
+              <ul class="text-[11px] text-slate-400 space-y-1 list-disc list-inside">
+                <li>Real-time degen PVP races (Wager matches)</li>
+                <li>Custom Shiba Rocket NFT skins with stat perks</li>
+                <li>CoinGecko & CoinMarketCap fast-track listing</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Phase 4 -->
+          <div class="relative">
+            <span class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-slate-700 border-2 border-[#0d1322]"></span>
+            <div class="bg-[#131b2e] p-3 rounded-2xl border border-slate-800">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs text-rose-400">PHASE 4: TO THE MOON</span>
+                <span class="text-[9px] bg-slate-800 text-slate-400 font-bold px-1.5 py-0.5 rounded">Q2 2027+</span>
+              </div>
+              <ul class="text-[11px] text-slate-400 space-y-1 list-disc list-inside">
+                <li>Staking pool with ecosystem revenue sharing</li>
+                <li>Tier-2 Centralized Exchange (CEX) listings</li>
+                <li>Solana meme ecosystem multi-token tournaments</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <!-- SOLANA WALLET SELECTION MODAL -->
@@ -190,15 +280,19 @@
       </div>
     </main>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="bg-[#141c30] border-t border-slate-800 grid grid-cols-2 py-2 px-4 z-20">
-      <button class="flex flex-col items-center py-1 text-emerald-400 font-bold text-xs">
+    <!-- Bottom Navigation Bar (3 Tabs) -->
+    <nav class="bg-[#141c30] border-t border-slate-800 grid grid-cols-3 py-2 px-2 z-20 shrink-0">
+      <button onclick="switchTab('game')" id="nav-game" class="flex flex-col items-center py-1 text-emerald-400 font-bold text-xs transition-colors">
         <i class="fa-solid fa-gamepad text-base mb-0.5"></i>
         <span>Flight</span>
       </button>
-      <button onclick="claimBonus()" class="flex flex-col items-center py-1 text-slate-400 hover:text-slate-200 text-xs">
+      <button onclick="switchTab('roadmap')" id="nav-roadmap" class="flex flex-col items-center py-1 text-slate-400 hover:text-slate-200 text-xs transition-colors">
+        <i class="fa-solid fa-map-location-dot text-base mb-0.5"></i>
+        <span>Roadmap</span>
+      </button>
+      <button onclick="claimBonus()" class="flex flex-col items-center py-1 text-slate-400 hover:text-slate-200 text-xs transition-colors">
         <i class="fa-solid fa-gas-pump text-base mb-0.5"></i>
-        <span>Refuel Tank</span>
+        <span>Refuel</span>
       </button>
     </nav>
 
@@ -222,6 +316,22 @@
       document.getElementById('fuelText').innerText = state.fuel + '/5';
       document.getElementById('fuelBar').style.width = (state.fuel / 5 * 100) + '%';
       updateWalletUI();
+    }
+
+    // --- TAB SWITCHING LOGIC ---
+    function switchTab(tabId) {
+      if (tabId === 'game') {
+        document.getElementById('tab-game').classList.remove('hidden');
+        document.getElementById('tab-roadmap').classList.add('hidden');
+        document.getElementById('nav-game').className = 'flex flex-col items-center py-1 text-emerald-400 font-bold text-xs transition-colors';
+        document.getElementById('nav-roadmap').className = 'flex flex-col items-center py-1 text-slate-400 hover:text-slate-200 text-xs transition-colors';
+        resize();
+      } else if (tabId === 'roadmap') {
+        document.getElementById('tab-game').classList.add('hidden');
+        document.getElementById('tab-roadmap').classList.remove('hidden');
+        document.getElementById('nav-roadmap').className = 'flex flex-col items-center py-1 text-purple-400 font-bold text-xs transition-colors';
+        document.getElementById('nav-game').className = 'flex flex-col items-center py-1 text-slate-400 hover:text-slate-200 text-xs transition-colors';
+      }
     }
 
     // --- SOLANA WALLET LOGIC ---
@@ -280,10 +390,8 @@
           alert('Solana wallet connection rejected.');
         }
       } else {
-        // Fallback for mobile browser without native extension
         const genDemo = confirm(`${providerKey.toUpperCase()} not detected on this browser.\n\nGenerate a Demo Solana Wallet to test the game right now?`);
         if (genDemo) {
-          // Solana Base58 fake address
           const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
           let fakeSol = '';
           for (let i = 0; i < 44; i++) fakeSol += chars.charAt(Math.floor(Math.random() * chars.length));
